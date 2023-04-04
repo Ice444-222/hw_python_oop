@@ -1,24 +1,22 @@
+from dataclasses import asdict, dataclass
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-    def __init__(self,
-                 training_type,
-                 duration,
-                 distance,
-                 speed,
-                 calories
-                 ) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
+    TRAINING_RESULT = ('Тип тренировки: {training_type}; '
+                       'Длительность: {duration:.3f} ч.; '
+                       'Дистанция: {distance:.3f} км; '
+                       'Ср. скорость: {speed:.3f} км/ч; '
+                       'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; Дистанция: '
-                f'{self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f}'
-                f' км/ч; Потрачено ккал: {self.calories:.3f}.')
+        return self.TRAINING_RESULT.format(**asdict(self))
 
 
 class Training:
@@ -50,12 +48,12 @@ class Training:
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
 
-        return
+        raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
 
-        return InfoMessage(self.__class__.__name__,
+        return InfoMessage(type(self).__name__,
                            self.duration,
                            self.get_distance(),
                            self.get_mean_speed(),
@@ -69,9 +67,9 @@ class Running(Training):
     CALORIES_MEAN_SPEED_MULTIPLIER = 18
 
     def get_spent_calories(self) -> float:
-        return ((Running.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
-                + Running.CALORIES_MEAN_SPEED_SHIFT) * self.weight
-                / Training.M_IN_KM * self.duration_m)
+        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
+                + self.CALORIES_MEAN_SPEED_SHIFT) * self.weight
+                / self.M_IN_KM * self.duration_m)
 
 
 class SportsWalking(Training):
@@ -89,8 +87,8 @@ class SportsWalking(Training):
                  ) -> None:
         super().__init__(action, duration, weight)
         self.height = height
-        self.height_m = height / 100
-        self.speed_m_s = self.get_mean_speed() * 0.278
+        self.height_m = height / SportsWalking.CM_IN_M
+        self.speed_m_s = self.get_mean_speed() * SportsWalking.KMH_IN_MS
 
     def get_spent_calories(self) -> float:
         return ((SportsWalking.CALORIES_MEAN_SPEED_MULTIPLIER * self.weight
@@ -126,21 +124,24 @@ class Swimming(Training):
                 * self.duration)
 
 
-def read_package(workout_type: str, data: list) -> Training:
+def read_package(workout_type: str, data: list[float]) -> Training:
     """Прочитать данные полученные от датчиков."""
 
-    workout_type_dict: dict = {'SWM': Swimming,
-                               'RUN': Running,
-                               'WLK': SportsWalking}
-    accepted_type = workout_type_dict[workout_type]
-
+    workout_types: dict[str, Training] = {'SWM': Swimming,
+                                          'RUN': Running,
+                                          'WLK': SportsWalking}
+    if workout_type not in workout_types:
+        raise ValueError('Введён неверный тип тренировки, '
+                         'на данный момент доступны следующие '
+                         'тренировки:"SWM","RUN","WLK"')
+    accepted_type = workout_types[workout_type]
     return accepted_type(*data)
 
 
 def main(training: Training) -> None:
     """Главная функция."""
 
-    info = Training.show_training_info(training)
+    info = training.show_training_info()
     print(info.get_message())
 
 
