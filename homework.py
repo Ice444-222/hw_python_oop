@@ -37,28 +37,25 @@ class Training:
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-
         return self.action * self.LEN_STEP / self.M_IN_KM
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
-
         return self.get_distance() / self.duration
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-
         raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-
-        return InfoMessage(type(self).__name__,
-                           self.duration,
-                           self.get_distance(),
-                           self.get_mean_speed(),
-                           self.get_spent_calories()
-                           )
+        return InfoMessage(
+            type(self).__name__,
+            self.duration,
+            self.get_distance(),
+            self.get_mean_speed(),
+            self.get_spent_calories()
+        )
 
 
 class Running(Training):
@@ -87,8 +84,8 @@ class SportsWalking(Training):
                  ) -> None:
         super().__init__(action, duration, weight)
         self.height = height
-        self.height_m = height / SportsWalking.CM_IN_M
-        self.speed_m_s = self.get_mean_speed() * SportsWalking.KMH_IN_MS
+        self.height_m = height / self.CM_IN_M
+        self.speed_m_s = self.get_mean_speed() * self.KMH_IN_MS
 
     def get_spent_calories(self) -> float:
         return ((SportsWalking.CALORIES_MEAN_SPEED_MULTIPLIER * self.weight
@@ -126,21 +123,20 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list[float]) -> Training:
     """Прочитать данные полученные от датчиков."""
-
-    workout_types: dict[str, Training] = {'SWM': Swimming,
-                                          'RUN': Running,
-                                          'WLK': SportsWalking}
+    workout_types: dict[str, type[Training]] = {'SWM': Swimming,
+                                                'RUN': Running,
+                                                'WLK': SportsWalking}
     if workout_type not in workout_types:
         raise ValueError('Введён неверный тип тренировки, '
                          'на данный момент доступны следующие '
-                         'тренировки:"SWM","RUN","WLK"')
+                         'тренировки: "{}"'.format
+                         (', '.join(workout_types.keys())))
     accepted_type = workout_types[workout_type]
     return accepted_type(*data)
 
 
 def main(training: Training) -> None:
     """Главная функция."""
-
     info = training.show_training_info()
     print(info.get_message())
 
