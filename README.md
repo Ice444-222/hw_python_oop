@@ -40,5 +40,7 @@ pip install -r requirements.txt
 
 ## Description of Operation:
 The main logic of the program is described in the main() and read_package() function.
+```
 read_package() - reads data from the input package
 main() - allocating data and print the message
+```
